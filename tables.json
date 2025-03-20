@@ -1,0 +1,60 @@
+{
+    "Tables":{
+      "Examiner": {
+        "attr": {
+          "PESEL": "Char(11)",
+          "Name": "Varchar(20)",
+          "Surname": "Varchar(20)",
+          "Adress": "Varchar(20)",
+          "Telephone_number": "Varchar(20)",
+          "License_number": "Varchar(20)"
+        },
+        "primary_key": ["PESEL"],
+        "foreign_key": {}
+      },
+      "Vehicle": {
+        "attr": {
+          "Registration_number": "Varchar(8)",
+          "Brand": "Varchar(30)",
+          "Type": "Varchar(20)",
+          "Gearbox": "Boolean",
+          "Inspection_date": "Date"
+        },
+        "primary_key": ["Registration_number"],
+        "foreign_key": {}
+      },
+      "Candidate": {
+        "attr": {
+          "PESEL": "Char(11)",
+          "Name": "Varchar(20)",
+          "Surname": "Varchar(20)",
+          "Adress": "Varchar(20)",
+          "Telephone_number": "Varchar(20)"
+        },
+        "primary_key": ["PESEL"],
+        "foreign_key": {}
+      },
+      "Exam": {
+        "attr": {
+          "Exam_ID": "Integer",
+          "Result": "Boolean",
+          "Exam_date": "Date",
+          "Begin_hour": "Date",
+          "End_hour": "Date",
+          "Category": "Varchar(4)",
+          "Type": "Boolean",
+          "Comments": "Text"
+        },
+        "primary_key": ["Exam_ID"],
+        "foreign_key": {
+            "Candidate": ["Varchar(11)", "Candidate.PESEL"], 
+            "Examiner": ["Varchar(11)", "Examiner.PESEL"], 
+            "Vehicle": ["Varchar(8)", "Vehicle.Registration_number"]
+        }
+      }
+    },
+    "Sheets": {
+      "Reservations": ["Name", "Surname", "PESEL", "Date_of_birth", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
+      "Examiners": ["Name", "Surname", "PESEL", "ID", "Date_of_acceptance", "Date_of_end_of_work"]
+    }
+  }
