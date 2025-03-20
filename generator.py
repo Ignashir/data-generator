@@ -1,8 +1,13 @@
 import pandas as pd
 import sqlalchemy
 import json
+import os
+from dotenv import load_dotenv
+from typing import Optional, List
 
 from db_model import create_table
+
+load_dotenv()
 
 class DataGenerator:
     def __init__(self, data_config_filepath: str):
@@ -20,7 +25,7 @@ class DataGenerator:
         with open(filepath, "r") as file:
             file_content = json.load(file)
         # Iterate over the tables in the configuration
-        engine = sqlalchemy.create_engine("url_to_database")
+        engine = sqlalchemy.create_engine(os.getenv("SQL_URL"))
         metadata = sqlalchemy.MetaData()
         for table_name, table_config in file_content["Tables"].items():
             print(f"Generating data for {table_name}")
@@ -29,3 +34,18 @@ class DataGenerator:
         for sheet_name, sheet_columns in file_content["Sheets"].items():
             print(f"Generating data for {sheet_name}")
             self.data_storage[sheet_name] = pd.DataFrame(columns=sheet_columns)
+    
+    def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql") -> None:
+        """Function to save all data sources to files
+
+        Args:
+            sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
+        """        
+        with open(sql_filename, "w") as file:
+            for table_name, table in self.data_storage.items():
+                if isinstance(table, pd.DataFrame):
+                    print(f"Saving {table_name} to file")
+                    table.to_csv(f"DataGenerator/data/{table_name}.csv", index=False)
+                else:
+                    print(f"Saving {table_name} to file")
+                    file.write(str(sqlalchemy.schema.CreateTable(table).compile()))
