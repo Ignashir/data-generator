@@ -4,10 +4,10 @@
         "attr": {
           "PESEL": "Char(11)",
           "Name": "Varchar(20)",
-          "Surname": "Varchar(20)",
-          "Address": "Varchar(20)",
-          "Telephone_number": "Varchar(20)",
-          "License_number": "Varchar(20)"
+          "Surname": "Varchar(30)",
+          "Address": "Varchar(80)",
+          "Telephone_number": "Integer",
+          "License_number": "Integer"
         },
         "primary_key": ["PESEL"],
         "foreign_key": {},
@@ -29,9 +29,9 @@
         "attr": {
           "PESEL": "Char(11)",
           "Name": "Varchar(20)",
-          "Surname": "Varchar(20)",
-          "Address": "Varchar(20)",
-          "Telephone_number": "Varchar(20)"
+          "Surname": "Varchar(30)",
+          "Address": "Varchar(80)",
+          "Telephone_number": "Integer"
         },
         "primary_key": ["PESEL"],
         "foreign_key": {},

@@ -1,5 +1,6 @@
 from typing import Any
 from faker import Faker
+import random
 
 import re
 
@@ -13,17 +14,17 @@ class RuleBook:
         # if index = -1 -> we want the whole output
         # if index = 0/1/2/... -> we want to split the output by spaces and retrieve only the ith element
         self.rules = {
-        "name": (fake.name, 0), 
-        "secondname": (fake.name, 1),
-        "surname": (fake.name, 1), 
-        "lastname": (fake.name, 1),
+        "name": (fake.first_name, -1), 
+        "surname": (fake.last_name,-1), 
+        "lastname": (fake.last_name, -1),
         "pesel": (fake.pesel, -1),
         "address": (fake.address, -1),
         "telephonenumber": (fake.phone_number, -1), 
         "telephonenum": (fake.phone_number, -1), 
         "phonenumber": (fake.phone_number, -1), 
         "phonenum": (fake.phone_number, -1),
-        "licensenumber": (fake.identity_card_number, -1)
+        "licensenumber": (fake.identity_card_number, -1),
+        "gearbox": (random.choice([0,1]))
     }
 
     def generate_column_value(self, column_name: str) -> Any:
