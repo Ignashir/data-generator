@@ -10,7 +10,8 @@
           "License_number": "Varchar(20)"
         },
         "primary_key": ["PESEL"],
-        "foreign_key": {}
+        "foreign_key": {},
+        "dependency": []
       },
       "Vehicle": {
         "attr": {
@@ -21,7 +22,8 @@
           "Inspection_date": "Date"
         },
         "primary_key": ["Registration_number"],
-        "foreign_key": {}
+        "foreign_key": {},
+        "dependency": []
       },
       "Candidate": {
         "attr": {
@@ -32,7 +34,8 @@
           "Telephone_number": "Varchar(20)"
         },
         "primary_key": ["PESEL"],
-        "foreign_key": {}
+        "foreign_key": {},
+        "dependency": []
       },
       "Exam": {
         "attr": {
@@ -50,11 +53,18 @@
             "Candidate": ["Varchar(11)", "Candidate.PESEL"], 
             "Examiner": ["Varchar(11)", "Examiner.PESEL"], 
             "Vehicle": ["Varchar(8)", "Vehicle.Registration_number"]
-        }
+        },
+        "dependency": ["Candidate", "Examiner", "Vehicle"]
       }
     },
     "Sheets": {
-      "Reservations": ["Name", "Surname", "PESEL", "Date_of_birth", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
-      "Examiners": ["Name", "Surname", "PESEL", "ID", "Date_of_acceptance", "Date_of_end_of_work"]
+      "Reservations": {
+        "columns": ["Name", "Surname", "PESEL", "Date_of_birth", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
+        "dependency": ["Candidate", "Examiner"]
+    },
+      "Examiners": {
+        "columns": ["Name", "Surname", "PESEL", "ID", "Date_of_acceptance", "Date_of_end_of_work"],
+        "dependency": ["Examiner"]
+    }
     }
   }
