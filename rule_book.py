@@ -15,8 +15,9 @@ class RuleBook:
         # if index = 0/1/2/... -> we want to split the output by spaces and retrieve only the ith element
         self.rules = {
         "name": (fake.first_name, -1), 
-        "surname": (fake.last_name,-1), 
-        "lastname": (fake.last_name, -1),
+        "secondname": (fake.last_name, -1),
+        "surname": (fake.last_name, -1), 
+        "lastname": (fake.name, 1),
         "pesel": (fake.pesel, -1),
         "address": (fake.address, -1),
         "telephonenumber": (fake.phone_number, -1), 
@@ -45,7 +46,9 @@ class RuleBook:
         try:
             value = self.rules[column_name]
             if value[1] == -1:
-                return value[0]()
+                res = value[0]()
+                res = re.sub(r"[\s]+", "", res)
+                return res
             else:
                 return value[0]().split(" ")[value[1]]
         except KeyError:

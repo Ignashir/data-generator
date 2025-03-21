@@ -30,18 +30,20 @@ class DataGenerator:
         metadata = sqlalchemy.MetaData()
         for table_name, table_config in file_content["Tables"].items():
             print(f"Creating DAO for {table_name}")
-            self.data_storage[table_name] = DAO(table_name, create_table(table_name, table_config, metadata=metadata), table_config["dependency"], engine=engine)
+            self.data_storage[table_name] = DAO(table_name, create_table(table_name, table_config, metadata=metadata), 
+                                                table_config["dependency"], engine=engine, metadata=metadata)
         metadata.create_all(engine)
         for sheet_name, sheet_columns in file_content["Sheets"].items():
             print(f"Creating DAO for {sheet_name}")
-            self.data_storage[sheet_name] = DAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), sheet_columns["dependency"])
+            self.data_storage[sheet_name] = DAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), sheet_columns["dependency"], engine=engine, metadata=metadata)
     
     def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql") -> None:
         """Function to save all data sources to files
 
         Args:
             sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
-        """        
+        """
+        # Save either Sheets into .csv or Tables into Create SQL statements        
         with open(sql_filename, "w") as file:
             for table_name, table in self.data_storage.items():
                 if isinstance(table.data_object, pd.DataFrame):
@@ -50,6 +52,9 @@ class DataGenerator:
                 else:
                     print(f"Saving {table_name} to file")
                     file.write(str(sqlalchemy.schema.CreateTable(table.data_object).compile()))
+        
+        for data in self.data_storage.values():
+            data.save()
     
     def validate_dict(self, generate_dict: Dict[str, int]) -> None:
         """This function should be modified by any one who wants to use the DataGenerator.
