@@ -3,7 +3,7 @@ import sqlalchemy
 import json
 import os
 from dotenv import load_dotenv
-from typing import Optional, Dict
+from typing import Optional, Dict, Self
 
 from db_model import create_table
 from dao import DAO
@@ -30,7 +30,7 @@ class DataGenerator:
         metadata = sqlalchemy.MetaData()
         for table_name, table_config in file_content["Tables"].items():
             print(f"Creating DAO for {table_name}")
-            self.data_storage[table_name] = DAO(table_name, create_table(table_name, table_config, metadata=metadata), table_config["dependency"])
+            self.data_storage[table_name] = DAO(table_name, create_table(table_name, table_config, metadata=metadata), table_config["dependency"], engine=engine)
         metadata.create_all(engine)
         for sheet_name, sheet_columns in file_content["Sheets"].items():
             print(f"Creating DAO for {sheet_name}")
@@ -44,12 +44,12 @@ class DataGenerator:
         """        
         with open(sql_filename, "w") as file:
             for table_name, table in self.data_storage.items():
-                if isinstance(table, pd.DataFrame):
+                if isinstance(table.data_object, pd.DataFrame):
                     print(f"Saving {table_name} to file")
-                    table.to_csv(f"DataGenerator/data/{table_name}.csv", index=False)
+                    table.data_object.to_csv(f"DataGenerator/data/{table_name}.csv", index=False)
                 else:
                     print(f"Saving {table_name} to file")
-                    file.write(str(sqlalchemy.schema.CreateTable(table).compile()))
+                    file.write(str(sqlalchemy.schema.CreateTable(table.data_object).compile()))
     
     def validate_dict(self, generate_dict: Dict[str, int]) -> None:
         """This function should be modified by any one who wants to use the DataGenerator.
@@ -69,7 +69,7 @@ class DataGenerator:
         if generate_dict["Exam"] > generate_dict["Reservations"]:
             raise ValueError("There cannot be more Exams than Reservations")
 
-    def generate_data(self, generate_dict: Dict[str, int]) -> None:
+    def generate_data(self, generate_dict: Dict[str, int]) -> Self:
         """Function to queue DAOs in a correct way (sorted by dependency)
 
         Args:
@@ -102,6 +102,7 @@ class DataGenerator:
                     idx = 0
                     # Set change flag to false to know when there are no more operations performed -> all data storages have been generated
                     change = False
+            return self
         except ValueError:
             print("Data to be generated is not valid")
 

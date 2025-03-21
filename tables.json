@@ -5,7 +5,7 @@
           "PESEL": "Char(11)",
           "Name": "Varchar(20)",
           "Surname": "Varchar(20)",
-          "Adress": "Varchar(20)",
+          "Address": "Varchar(20)",
           "Telephone_number": "Varchar(20)",
           "License_number": "Varchar(20)"
         },
@@ -30,7 +30,7 @@
           "PESEL": "Char(11)",
           "Name": "Varchar(20)",
           "Surname": "Varchar(20)",
-          "Adress": "Varchar(20)",
+          "Address": "Varchar(20)",
           "Telephone_number": "Varchar(20)"
         },
         "primary_key": ["PESEL"],
@@ -50,8 +50,8 @@
         },
         "primary_key": ["Exam_ID"],
         "foreign_key": {
-            "Candidate": ["Varchar(11)", "Candidate.PESEL"], 
-            "Examiner": ["Varchar(11)", "Examiner.PESEL"], 
+            "Candidate": ["Char(11)", "Candidate.PESEL"], 
+            "Examiner": ["Char(11)", "Examiner.PESEL"], 
             "Vehicle": ["Varchar(8)", "Vehicle.Registration_number"]
         },
         "dependency": ["Candidate", "Examiner", "Vehicle"]
