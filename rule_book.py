@@ -24,7 +24,17 @@ class RuleBook:
         "phonenumber": (fake.phone_number, -1), 
         "phonenum": (fake.phone_number, -1),
         "licensenumber": (fake.identity_card_number, -1),
-        "gearbox": (random.choice([0,1]))
+        "gearbox": (fake.random_int(min = 0, max = 1), -1),
+        "brand": (fake.random_element(elements = ["Toyota", "Suzuki", "Renault", "Ford", "Opel", "Skoda", "Kia", "Volkswagen"]), -1),
+        "cartype": (fake.random_element(elements = ["car", "truck", "motorcycle"]), -1),
+        "inspectiondate": (fake.date, -1),
+        "examdate": (fake.date, -1),
+        "result": (fake.random_int(min = 0, max = 1), -1),
+        "category": (fake.random_element(elements= ["AM", "A1", "A2", "B1", "B", "B+E" , "C", "C+E"]), -1),
+        "examtype": (fake.random_int(min = 0, max = 1), -1),
+        "examcomment": (fake.text(max_nb_chars=200), -1),
+        "registrationnumber": (fake.bothify(text='??######', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'), -1)
+
     }
 
     def generate_column_value(self, column_name: str) -> Any:
