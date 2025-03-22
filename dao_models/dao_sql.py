@@ -7,7 +7,7 @@ import pandas as pd
 import random
 
 class SQLDAO(DAO):
-    def __init__(self, name: str, data_object: Any, dependency: ..., 
+    def __init__(self, name: str, data_object: sqlalchemy.Table, dependency: ..., 
                  /, engine: Optional[sqlalchemy.Engine] = None, metadata: Optional[sqlalchemy.MetaData] = None):
         super().__init__(name, data_object, dependency)
         self.engine = engine
@@ -15,16 +15,16 @@ class SQLDAO(DAO):
         self.insert_buffer = pd.DataFrame(columns=self.get_column_names())
     
     def get_column_names(self) -> Dict[str, None]:
-        with self.engine.connect() as conn:
-            result = conn.execute(sqlalchemy.select(self.data_object))
-        return {col: None for col in result.keys()}
+        # with self.engine.connect() as conn:
+        #     result = conn.execute(sqlalchemy.select(self.data_object))
+        return {col.name: None for col in self.data_object.columns}
     
     def generate_entry(self) -> Dict[str, Any]:
         entry = self.get_column_names()
         for column in entry.keys():
             # If column is not a foreign key
             if column not in self.dependency:
-                entry[column] = BasicRuleBook.generate_column_value(column_name=column)
+                entry[column] = BasicRuleBook.generate_column_value(column)
             else:
                 # Reflect dependend table
                 table = sqlalchemy.Table(column, self.metadata, autoload_with=self.engine)
@@ -40,7 +40,7 @@ class SQLDAO(DAO):
         self.generated = True
         for _ in range(number_of_entries):
             contents = self.generate_entry()
-            self.insert_buffer = pd.concat([self.insert_buffer, pd.DataFrame(contents.items())], ignore_index=True)
+            self.insert_buffer = pd.concat([self.insert_buffer, pd.DataFrame([contents])], ignore_index=True)
             with self.engine.connect() as conn:
                 print("Adding to table ", self.name)
                 stmt = self.data_object.insert().values(contents)
@@ -49,5 +49,8 @@ class SQLDAO(DAO):
                 conn.execute(stmt)
                 conn.commit()
     
-    def save(self) -> None:
-        self.insert_buffer.to_csv(f"{self.name}_insert.csv")
+    def save(self, path: Optional[str] = None) -> None:
+        if path:
+            self.insert_buffer.to_csv(f"{path}/{self.name}_insert.csv")
+        else: 
+            self.insert_buffer.to_csv(f"{self.name}_insert.csv")

@@ -1,8 +1,6 @@
 import sqlalchemy
 import re
 
-# TODO Hour nie jest typem danych zmienic na DateTime
-
 # Possible types to be converted from json to sqlalchemy types
 types_dict = {
     "Integer": sqlalchemy.Integer,

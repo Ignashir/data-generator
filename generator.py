@@ -2,6 +2,7 @@ import pandas as pd
 import sqlalchemy
 import json
 import os
+import traceback
 from dotenv import load_dotenv
 from typing import Optional, Dict, Self
 
@@ -39,7 +40,7 @@ class DataGenerator:
             self.data_storage[sheet_name] = CSVDAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), 
                                                    list(sheet_columns["foreign_key"]), sheet_columns["foreign_key"], engine=engine, metadata=metadata)
     
-    def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql") -> None:
+    def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql", path: Optional[str] = None) -> None:
         """Function to save all data sources to files
 
         Args:
@@ -54,7 +55,7 @@ class DataGenerator:
         
         # Save Sheets into .csv and Insert values into .csv
         for data in self.data_storage.values():
-            data.save()
+            data.save(path)
     
     def validate_dict(self, generate_dict: Dict[str, int]) -> None:
         """This function should be modified by any one who wants to use the DataGenerator.
@@ -109,7 +110,7 @@ class DataGenerator:
                     change = False
             return self
         except ValueError:
-            print("Data to be generated is not valid")
+            traceback.print_exc()
 
 
 sample = {
@@ -121,4 +122,4 @@ sample = {
     "Examiners": 10
 }
 
-DataGenerator("DataGenerator/tables.json").generate_data(sample)
+DataGenerator("DataGenerator/tables.json").generate_data(sample).save_to_file(path="DataGenerator/data")

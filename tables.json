@@ -6,8 +6,8 @@
           "Name": "Varchar(20)",
           "Surname": "Varchar(30)",
           "Address": "Varchar(80)",
-          "Telephone_number": "Integer",
-          "License_number": "Integer"
+          "Telephone_number": "Varchar(20)",
+          "License_number": "Varchar(9)"
         },
         "primary_key": ["PESEL"],
         "foreign_key": {}
@@ -29,7 +29,7 @@
           "Name": "Varchar(20)",
           "Surname": "Varchar(30)",
           "Address": "Varchar(80)",
-          "Telephone_number": "Integer"
+          "Telephone_number": "Varchar(20)"
         },
         "primary_key": ["PESEL"],
         "foreign_key": {}

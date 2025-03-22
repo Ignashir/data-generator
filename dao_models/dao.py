@@ -54,6 +54,6 @@ class DAO(ABC):
         pass
     
     @abstractmethod
-    def save(self) -> None:
+    def save(self, path: Optional[str] = None) -> None:
         pass
             
