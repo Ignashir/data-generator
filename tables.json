@@ -10,8 +10,7 @@
           "License_number": "Integer"
         },
         "primary_key": ["PESEL"],
-        "foreign_key": {},
-        "dependency": []
+        "foreign_key": {}
       },
       "Vehicle": {
         "attr": {
@@ -22,8 +21,7 @@
           "Inspection_date": "Date"
         },
         "primary_key": ["Registration_number"],
-        "foreign_key": {},
-        "dependency": []
+        "foreign_key": {}
       },
       "Candidate": {
         "attr": {
@@ -34,8 +32,7 @@
           "Telephone_number": "Integer"
         },
         "primary_key": ["PESEL"],
-        "foreign_key": {},
-        "dependency": []
+        "foreign_key": {}
       },
       "Exam": {
         "attr": {
@@ -53,18 +50,33 @@
             "Candidate": ["Char(11)", "Candidate.PESEL"], 
             "Examiner": ["Char(11)", "Examiner.PESEL"], 
             "Vehicle": ["Varchar(8)", "Vehicle.Registration_number"]
-        },
-        "dependency": ["Candidate", "Examiner", "Vehicle"]
+        }
       }
     },
     "Sheets": {
       "Reservations": {
-        "columns": ["Name", "Surname", "PESEL", "Date_of_birth", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
-        "dependency": ["Candidate", "Examiner"]
-    },
+        "columns": ["Name", "Surname", "PESEL", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
+        "foreign_key": {
+            "Candidate": {
+                "Name": "Name",
+                "Surname": "Surname",
+                "PESEL": "PESEL"
+                },
+            "Examiner": {
+                "Assigned_examiner_ID": "License_number"
+                }
+            }
+        },
       "Examiners": {
-        "columns": ["Name", "Surname", "PESEL", "ID", "Date_of_acceptance", "Date_of_end_of_work"],
-        "dependency": ["Examiner"]
-    }
+        "columns": ["Name", "Surname", "PESEL", "License_number", "Date_of_acceptance", "Date_of_end_of_work"],
+        "foreign_key": {
+            "Examiner": {
+                "Name": "Name",
+                "Surname": "Surname",
+                "PESEL": "PESEL",
+                "License_number": "License_number"
+                }
+            }
+        }
     }
   }

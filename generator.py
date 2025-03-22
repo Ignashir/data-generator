@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from typing import Optional, Dict, Self
 
 from db_model import create_table
-from dao import DAO
+from dao_models.dao_csv import CSVDAO
+from dao_models.dao_sql import SQLDAO
 
 load_dotenv()
 
@@ -30,12 +31,13 @@ class DataGenerator:
         metadata = sqlalchemy.MetaData()
         for table_name, table_config in file_content["Tables"].items():
             print(f"Creating DAO for {table_name}")
-            self.data_storage[table_name] = DAO(table_name, create_table(table_name, table_config, metadata=metadata), 
-                                                table_config["dependency"], engine=engine, metadata=metadata)
+            self.data_storage[table_name] = SQLDAO(table_name, create_table(table_name, table_config, metadata=metadata), 
+                                                list(table_config["foreign_key"]), engine=engine, metadata=metadata)
         metadata.create_all(engine)
         for sheet_name, sheet_columns in file_content["Sheets"].items():
             print(f"Creating DAO for {sheet_name}")
-            self.data_storage[sheet_name] = DAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), sheet_columns["dependency"], engine=engine, metadata=metadata)
+            self.data_storage[sheet_name] = CSVDAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), 
+                                                   list(sheet_columns["foreign_key"]), sheet_columns["foreign_key"], engine=engine, metadata=metadata)
     
     def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql") -> None:
         """Function to save all data sources to files
@@ -43,16 +45,14 @@ class DataGenerator:
         Args:
             sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
         """
-        # Save either Sheets into .csv or Tables into Create SQL statements        
+        # Save Tables into Create SQL statements        
         with open(sql_filename, "w") as file:
             for table_name, table in self.data_storage.items():
-                if isinstance(table.data_object, pd.DataFrame):
-                    print(f"Saving {table_name} to file")
-                    table.data_object.to_csv(f"DataGenerator/data/{table_name}.csv", index=False)
-                else:
+                if isinstance(table, SQLDAO):
                     print(f"Saving {table_name} to file")
                     file.write(str(sqlalchemy.schema.CreateTable(table.data_object).compile()))
         
+        # Save Sheets into .csv and Insert values into .csv
         for data in self.data_storage.values():
             data.save()
     
