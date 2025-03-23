@@ -5,7 +5,7 @@ from typing import Optional
 
 class HourGenerator:
     @staticmethod
-    def generate_hours(begin: int, end: int, format = str):
+    def generate_hours(begin: int, end: int, format: str):
         """Function generating hours (tailored to yield 2 hour variables that are some time apart)
         It is important that when you want to generate 2 columns with hours, you place them in such order (earlier hour, later hour)
         """

@@ -87,9 +87,10 @@ class DataGenerator:
             # Sort the order of generation by the dependency
             generation_order = sorted(list(self.data_storage.values()), key=lambda x: len(x.dependency))
             idx = 0
-            change = False
+            # Keep track of how many storages have been generated
+            generated = 0
             # Iterate through generation order until all data storages have been generated
-            while True:
+            while generated < len(generation_order):
                 data_access = generation_order[idx]
                 # Check if the data has already been generated
                 # Check if this data storage is either:
@@ -97,17 +98,12 @@ class DataGenerator:
                 #        all dependencies have been already generated
                 if not data_access.has_been_generated() and (data_access.is_not_dependent() or data_access.is_dependency_fulfilled(generation_order)):
                     data_access.generate(generate_dict[data_access.name])
-                    change = True
-                # Check if there are still operations performed
-                if not change:
-                    break
+                    generated += 1
                 idx += 1
                 # We are out of bounds
                 if idx >= len(generation_order):
                     # Reset index to iterate through whole list again
                     idx = 0
-                    # Set change flag to false to know when there are no more operations performed -> all data storages have been generated
-                    change = False
             return self
         except ValueError:
             traceback.print_exc()

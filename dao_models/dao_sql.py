@@ -13,6 +13,12 @@ class SQLDAO(DAO):
         self.engine = engine
         self.metadata = metadata
         self.insert_buffer = pd.DataFrame(columns=self.get_column_names())
+
+        self.additional_rules = {
+            # If exam type is generated to be 0 (theoretical exam) then we dont need a vehicle so set it to Null 
+            # (can't be None because all such values identicate that it needs to be generated)
+            "Vehicle": lambda content: None if content["Type"] else sqlalchemy.null()
+        }
     
     def get_column_names(self) -> Dict[str, None]:
         # with self.engine.connect() as conn:
@@ -22,18 +28,23 @@ class SQLDAO(DAO):
     def generate_entry(self) -> Dict[str, Any]:
         entry = self.get_column_names()
         for column in entry.keys():
-            # If column is not a foreign key
-            if column not in self.dependency:
-                entry[column] = BasicRuleBook.generate_column_value(column)
-            else:
-                # Reflect dependend table
-                table = sqlalchemy.Table(column, self.metadata, autoload_with=self.engine)
-                table_primary_key = [col.name for col in table.primary_key.columns]
-                with self.engine.connect() as conn:
-                    stmt = table.select().with_only_columns(*[table.c[key] for key in table_primary_key])
-                    result = conn.execute(stmt)
-                    random_result = random.choice(result.fetchall())[0]
-                entry[column] = random_result
+            # Check for any additional rules
+            if column in self.additional_rules.keys():
+                entry[column] = self.additional_rules[column](entry)
+            # Check if column has been already filled
+            if entry[column] is None:
+                # If column is not a foreign key
+                if column not in self.dependency:
+                    entry[column] = BasicRuleBook.generate_column_value(column)
+                else:
+                    # Reflect dependend table
+                    table = sqlalchemy.Table(column, self.metadata, autoload_with=self.engine)
+                    table_primary_key = [col.name for col in table.primary_key.columns]
+                    with self.engine.connect() as conn:
+                        stmt = table.select().with_only_columns(*[table.c[key] for key in table_primary_key])
+                        result = conn.execute(stmt)
+                        random_result = random.choice(result.fetchall())[0]
+                    entry[column] = random_result
         return entry
     
     def generate(self, number_of_entries):

@@ -9,7 +9,7 @@
           "Telephone_number": "Varchar(20)",
           "License_number": "Varchar(9)"
         },
-        "primary_key": ["PESEL"],
+        "primary_key": ["License_number"],
         "foreign_key": {}
       },
       "Vehicle": {
@@ -48,23 +48,21 @@
         "primary_key": ["Exam_ID"],
         "foreign_key": {
             "Candidate": ["Char(11)", "Candidate.PESEL"], 
-            "Examiner": ["Char(11)", "Examiner.PESEL"], 
+            "Examiner": ["Varchar(9)", "Examiner.License_number"], 
             "Vehicle": ["Varchar(8)", "Vehicle.Registration_number"]
         }
       }
     },
     "Sheets": {
       "Reservations": {
-        "columns": ["Name", "Surname", "PESEL", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
+        "columns": ["PESEL", "Reservation_date", "Reservation_hour", "Exam_type", "Assigned_examiner_ID"],
         "foreign_key": {
-            "Candidate": {
-                "Name": "Name",
-                "Surname": "Surname",
-                "PESEL": "PESEL"
-                },
-            "Examiner": {
-                "Assigned_examiner_ID": "License_number"
-                }
+            "Exam": {
+                "PESEL": "Candidate",
+                "Reservation_date": "Exam_date",
+                "Reservation_hour": "Begin_hour",
+                "Assigned_examiner_ID": "Examiner"
+            }
             }
         },
       "Examiners": {

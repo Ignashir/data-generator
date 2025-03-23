@@ -68,7 +68,7 @@ class CSVDAO(DAO):
     def generate(self, number_of_entries):
         self.generated = True
         for idx in range(number_of_entries):
-            contents = self.generate_entry(idx)
+            contents = self.generate_entry(-1)
             print("Adding to table ", self.name)
             self.data_object = pd.concat([self.data_object, pd.DataFrame([contents])], ignore_index=True)
             
