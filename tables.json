@@ -39,8 +39,8 @@
           "Exam_ID": "Integer",
           "Result": "Boolean",
           "Exam_date": "Date",
-          "Begin_hour": "Date",
-          "End_hour": "Date",
+          "Begin_hour": "Time",
+          "End_hour": "Time",
           "Category": "Varchar(4)",
           "Type": "Boolean",
           "Comments": "Text"

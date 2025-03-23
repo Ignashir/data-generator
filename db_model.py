@@ -10,7 +10,8 @@ types_dict = {
     "Date": sqlalchemy.Date,
     "DateTime": sqlalchemy.DateTime,
     "Char": sqlalchemy.CHAR,
-    "Text": sqlalchemy.Text
+    "Text": sqlalchemy.Text,
+    "Time": sqlalchemy.Time
 }
 
 def return_datatype(datatype_string: str) -> sqlalchemy.types.TypeEngine:
