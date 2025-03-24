@@ -69,12 +69,16 @@ class CSVDAO(DAO):
         self.generated = True
         for idx in range(number_of_entries):
             contents = self.generate_entry(-1)
-            print("Adding to table ", self.name)
+            # print("Adding to table ", self.name)
             self.data_object = pd.concat([self.data_object, pd.DataFrame([contents])], ignore_index=True)
-            
+
+    def load(self, path: str) -> None:
+        self.data_object = pd.read_csv(path)
+        self.loaded = True
+        print(self.name, " loaded from file")
     
     def save(self, path: Optional[str] = None) -> None:
         if path:
-            self.data_object.to_csv(f"{path}/{self.name}.csv")
+            self.data_object.to_csv(f"{path}/{self.name}_sheet.csv", index=False)
         else:
-            self.data_object.to_csv(f"{self.name}.csv")
+            self.data_object.to_csv(f"{self.name}_sheet.csv", index=False)

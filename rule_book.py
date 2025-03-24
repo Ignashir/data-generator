@@ -54,7 +54,7 @@ class RuleBook:
         "dateofendofwork": (lambda : fake.date_between(start_date="+1w", end_date="+1y").strftime(self.config["date_format"]), -1),
         "dateofacceptance": (lambda : fake.date_between(start_date="-5y", end_date="-1w").strftime(self.config["date_format"]), -1),
         "comments": (lambda : fake.text(20), -1),
-        "examid": (lambda : fake.random_int(min=100000, max=999999), -1),
+        "examid": (lambda : fake.random_int(min=1, max=10000000), -1),
         "reservationdate": (lambda : fake.date_between(start_date="-3w").strftime(self.config["date_format"]), -1),
         "reservationhour": (lambda : fake.time(pattern=self.config["time_format"]), -1),
         "examtype": (lambda : fake.boolean(50), -1), 

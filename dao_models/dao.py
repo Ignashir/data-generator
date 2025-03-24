@@ -16,7 +16,16 @@ class DAO(ABC):
         self.data_object = data_object
         self.dependency = dependency
         self.generated = False
-    
+        self.loaded = False
+
+    def unload(self) -> None:
+        """Function sets data storage as not loaded so that multiple files can be inserted
+        """
+        self.loaded = False
+
+    def has_been_loaded(self) -> bool:
+        return self.loaded
+
     def is_dependent_on(self, other: Self) -> bool:
         return other.name in self.dependency
     
@@ -31,12 +40,26 @@ class DAO(ABC):
         """
         return all([True if data_storage.has_been_generated() else False for data_storage in list_of_generated if self.is_dependent_on(data_storage)])
 
+    def is_dependency_fulfilled_for_loading(self, list_of_loaded: List[Self]) -> bool:
+        # TODO delete this and add function to other as an argument -> make has been generated / loaded static
+        # deadline is close :/
+        return all([True if data_storage.has_been_loaded() else False for data_storage in list_of_loaded if self.is_dependent_on(data_storage)])
+
     def has_been_generated(self) -> bool:
         return self.generated
     
     def is_not_dependent(self) -> bool:
         return not self.dependency
     
+    @abstractmethod
+    def load(self, path: str) -> None:
+        """Function specifing how a data storage should be loaded from .csv file
+
+        Args:
+            path (str): path to .csv file
+        """
+        pass
+
     @abstractmethod
     def get_column_names(self) -> dict:
         """ Extract column names from certain storage and transform it to look like this : {"column1": None (None will be replaced by generated value)}

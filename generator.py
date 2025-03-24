@@ -40,12 +40,43 @@ class DataGenerator:
             self.data_storage[sheet_name] = CSVDAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), 
                                                    list(sheet_columns["foreign_key"]), sheet_columns["foreign_key"], engine=engine, metadata=metadata)
     
+    def create_loading_dict(self, path: str) -> Dict[str, str]:
+        return {file.split("_")[0]: os.path.join(path, file) for file in os.listdir(path)}
+
+    def load_from_folder(self, folder_path: str = "DataGenerator/data/snapshots/") -> Self:
+        # Iterate through all snapshots in folder
+        for timestamp in os.listdir(folder_path):
+            files = self.create_loading_dict(os.path.join(folder_path, timestamp))
+            # Sort the order of generation by the dependency
+            loading_order = sorted(list(self.data_storage.values()), key=lambda x: len(x.dependency))
+            idx = 0
+            # Keep track of how many storages have been loaded
+            loaded = 0
+            # Iterate through loading order until all data storages have been loaded
+            while loaded < len(loading_order):
+                data_access = loading_order[idx]
+                # Check if the data has already been loaded
+                # Check if this data storage is either:
+                #        not dependent on any other data storage
+                #        all dependencies have been already loaded
+                if not data_access.has_been_loaded() and (data_access.is_not_dependent() or data_access.is_dependency_fulfilled_for_loading(loading_order)):
+                    data_access.load(files[data_access.name])
+                    loaded += 1
+                idx += 1
+                # We are out of bounds
+                if idx >= len(loading_order):
+                    # Reset index to iterate through whole list again
+                    idx = 0
+            [ds.unload() for ds in loading_order]
+        return self
+
     def save_to_file(self, sql_filename: Optional[str] = "DataGenerator/data/create.sql", path: Optional[str] = None) -> None:
         """Function to save all data sources to files
 
         Args:
             sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
         """
+        os.makedirs(path)
         # Save Tables into Create SQL statements        
         with open(sql_filename, "w") as file:
             for table_name, table in self.data_storage.items():
@@ -109,13 +140,25 @@ class DataGenerator:
             traceback.print_exc()
 
 
-sample = {
+sample_T1 = {
+    "Examiner": 100,
+    "Candidate": 900,
+    "Vehicle": 20,
+    "Exam": 2000,
+    "Reservations": 2200,
+    "Examiners": 100
+}
+
+sample_T2 = {
     "Examiner": 10,
-    "Candidate": 10,
+    "Candidate": 150,
     "Vehicle": 5,
-    "Exam": 20,
-    "Reservations": 30,
+    "Exam": 500,
+    "Reservations": 700,
     "Examiners": 10
 }
 
-DataGenerator("DataGenerator/tables.json").generate_data(sample).save_to_file(path="DataGenerator/data")
+# Generate T1
+DataGenerator("DataGenerator/tables.json").generate_data(sample_T1).save_to_file(path="DataGenerator/data/snapshots/T1")
+# Load T1 and Generate T2
+# DataGenerator("DataGenerator/tables.json").load_from_folder().generate_data(sample_T2).save_to_file(path="DataGenerator/data/snapshots/T2")
