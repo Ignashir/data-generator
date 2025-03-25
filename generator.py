@@ -3,6 +3,7 @@ import sqlalchemy
 import json
 import os
 import traceback
+import argparse
 from dotenv import load_dotenv
 from typing import Optional, Dict, Self
 
@@ -76,17 +77,20 @@ class DataGenerator:
         Args:
             sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
         """
-        os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
         # Save Tables into Create SQL statements        
         with open(sql_filename, "w") as file:
             for table_name, table in self.data_storage.items():
                 if isinstance(table, SQLDAO):
                     print(f"Saving {table_name} to file")
                     file.write(str(sqlalchemy.schema.CreateTable(table.data_object).compile()))
-        
+        # What is the most current snapshot
+        current_version = len(os.listdir(path))
+        path_to_save = os.path.join(path, f"T{current_version+1}")
+        os.makedirs(path_to_save, exist_ok=True)
         # Save Sheets into .csv and Insert values into .csv
         for data in self.data_storage.values():
-            data.save(path)
+            data.save(path_to_save)
     
     def validate_dict(self, generate_dict: Dict[str, int]) -> None:
         """This function should be modified by any one who wants to use the DataGenerator.
@@ -140,25 +144,42 @@ class DataGenerator:
             traceback.print_exc()
 
 
-sample_T1 = {
-    "Examiner": 100,
-    "Candidate": 900,
-    "Vehicle": 20,
-    "Exam": 2000,
-    "Reservations": 2200,
-    "Examiners": 100
-}
+def from_nothing(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
+    generation_dict = {}
+    print("===============================")
+    print("Provide amount of data to be generated")
+    generation_dict["Examiner"] = int(input("Examiner : "))
+    generation_dict["Candidate"] = int(input("Candidate : "))
+    generation_dict["Vehicle"] = int(input("Vehicle : "))
+    generation_dict["Exam"] = int(input("Exam : "))
+    generation_dict["Reservations"] = int(input("Reservations : "))
+    generation_dict["Examiners"] = int(input("Examiners : "))
+    print("===============================")
+    DataGenerator(path_to_config).generate_data(generation_dict).save_to_file(path=path_to_save)
 
-sample_T2 = {
-    "Examiner": 10,
-    "Candidate": 150,
-    "Vehicle": 5,
-    "Exam": 500,
-    "Reservations": 700,
-    "Examiners": 10
-}
 
-# Generate T1
-DataGenerator("DataGenerator/tables.json").generate_data(sample_T1).save_to_file(path="DataGenerator/data/snapshots/T1")
-# Load T1 and Generate T2
-# DataGenerator("DataGenerator/tables.json").load_from_folder().generate_data(sample_T2).save_to_file(path="DataGenerator/data/snapshots/T2")
+def preloaded(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
+    generation_dict = {}
+    print("===============================")
+    print("Provide amount of data to be generated")
+    generation_dict["Examiner"] = int(input("Examiner : "))
+    generation_dict["Candidate"] = int(input("Candidate : "))
+    generation_dict["Vehicle"] = int(input("Vehicle : "))
+    generation_dict["Exam"] = int(input("Exam : "))
+    generation_dict["Reservations"] = int(input("Reservations : "))
+    generation_dict["Examiners"] = int(input("Examiners : "))
+    print("===============================")
+    DataGenerator(path_to_config).load_from_folder().generate_data(generation_dict).save_to_file(path=path_to_save)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generation of data for provided structures specified in .json file")
+    parser.add_argument("--config", default="DataGenerator/tables.json", help="Path to .json file with all configuration, for more information on structure, please refer to README")
+    parser.add_argument("--load", default=False, help="Boolean value that specifies if you want to generate from nothing or load already generated data. Data to be loaded should be in DataGenerator/data/snapshot/")
+
+    args = parser.parse_args()
+
+    if args.load:
+        preloaded(args.config)
+    else:
+        from_nothing(args.config)
