@@ -44,13 +44,15 @@ class CSVDAO(DAO):
             table = sqlalchemy.Table(dep, self.metadata, autoload_with=self.engine)
             # Get all results from that Table
             with self.engine.connect() as conn:
-                stmt = table.select()
-                result = conn.execute(stmt).fetchall()
                 # Either take random result or ith one
                 if index == -1:
-                    result = random.choice(result)
+                    stmt = table.select().order_by(sqlalchemy.func.newid()).limit(1)
+                    result = conn.execute(stmt).first()
                 else:
+                    # TODO maybe add basic id for each table
                     try:
+                        stmt = table.select()
+                        result = conn.execute(stmt).fetchall()
                         result = result[index]
                     except IndexError:
                         continue

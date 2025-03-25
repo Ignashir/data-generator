@@ -4,6 +4,7 @@ from typing import Optional, List, Any, Dict
 
 import sqlalchemy
 import pandas as pd
+import csv
 import random
 
 class SQLDAO(DAO):
@@ -41,9 +42,14 @@ class SQLDAO(DAO):
                     table = sqlalchemy.Table(column, self.metadata, autoload_with=self.engine)
                     table_primary_key = [col.name for col in table.primary_key.columns]
                     with self.engine.connect() as conn:
-                        stmt = table.select().with_only_columns(*[table.c[key] for key in table_primary_key])
-                        result = conn.execute(stmt)
-                        random_result = random.choice(result.fetchall())[0]
+                        # Old 
+                        # stmt = table.select().with_only_columns(*[table.c[key] for key in table_primary_key])
+                        # result = conn.execute(stmt)
+                        # random_result = random.choice(result.fetchall())[0]
+
+                        # New
+                        stmt = table.select().order_by(sqlalchemy.func.newid()).limit(1).with_only_columns(*[table.c[key] for key in table_primary_key])
+                        random_result = conn.execute(stmt).first()[0]
                     entry[column] = random_result
         return entry
     
@@ -77,7 +83,6 @@ class SQLDAO(DAO):
                 conn.commit()
         self.loaded = True
         print(self.name, " loaded from file")
-
 
     def save(self, path: Optional[str] = None) -> None:
         if path:
