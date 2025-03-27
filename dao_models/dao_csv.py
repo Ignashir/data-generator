@@ -6,8 +6,6 @@ from typing import Dict, Any, Optional
 
 import sqlalchemy
 import pandas as pd
-import random
-
 
 class CSVDAO(DAO):
     def __init__(self, name, data_object, dependency = ..., mapping_dict: Dict[str, str] = None, 
@@ -44,18 +42,18 @@ class CSVDAO(DAO):
             table = sqlalchemy.Table(dep, self.metadata, autoload_with=self.engine)
             # Get all results from that Table
             with self.engine.connect() as conn:
-                # Either take random result or ith one
-                if index == -1:
-                    stmt = table.select().order_by(sqlalchemy.func.newid()).limit(1)
+                # Get amount of rows
+                max_index = sqlalchemy.select(sqlalchemy.func.count()).select_from(table)
+                max_index = conn.execute(max_index).scalar()
+                # There is a row to take
+                if index < max_index:
+                    stmt = table.select().order_by(table.primary_key.columns).offset(index).limit(1)
                     result = conn.execute(stmt).first()
                 else:
-                    # TODO maybe add basic id for each table
-                    try:
-                        stmt = table.select()
-                        result = conn.execute(stmt).fetchall()
-                        result = result[index]
-                    except IndexError:
-                        continue
+                    # If you want to draw a random entry from dependency database uncomment this
+                    # stmt = table.select().order_by(sqlalchemy.func.newid()).limit(1)
+                    # result = conn.execute(stmt).first()
+                    continue
             # Map the resulted list onto a dict with column names as keys and pulled values as values
             result = {col.name: val for col, val in zip(table.columns, result)}
             # Set wanted info from pulled values onto the entry dictionary
@@ -70,7 +68,7 @@ class CSVDAO(DAO):
     def generate(self, number_of_entries):
         self.generated = True
         for idx in range(number_of_entries):
-            contents = self.generate_entry(-1)
+            contents = self.generate_entry(idx)
             # print("Adding to table ", self.name)
             self.data_object = pd.concat([self.data_object, pd.DataFrame([contents])], ignore_index=True)
 
