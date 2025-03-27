@@ -13,8 +13,6 @@ class SQLDAO(DAO):
         super().__init__(name, data_object, dependency)
         self.engine = engine
         self.metadata = metadata
-        self.insert_buffer = pd.DataFrame(columns=self.get_column_names())
-
         self.additional_rules = {
             # If exam type is generated to be 0 (theoretical exam) then we dont need a vehicle so set it to Null 
             # (can't be None because all such values identicate that it needs to be generated)
@@ -22,8 +20,6 @@ class SQLDAO(DAO):
         }
     
     def get_column_names(self) -> Dict[str, None]:
-        # with self.engine.connect() as conn:
-        #     result = conn.execute(sqlalchemy.select(self.data_object))
         return {col.name: None for col in self.data_object.columns}
     
     def generate_entry(self) -> Dict[str, Any]:
@@ -42,12 +38,7 @@ class SQLDAO(DAO):
                     table = sqlalchemy.Table(column, self.metadata, autoload_with=self.engine)
                     table_primary_key = [col.name for col in table.primary_key.columns]
                     with self.engine.connect() as conn:
-                        # Old 
-                        # stmt = table.select().with_only_columns(*[table.c[key] for key in table_primary_key])
-                        # result = conn.execute(stmt)
-                        # random_result = random.choice(result.fetchall())[0]
-
-                        # New
+                        # Randomly select a row, with only primary keys
                         stmt = table.select().order_by(sqlalchemy.func.newid()).limit(1).with_only_columns(*[table.c[key] for key in table_primary_key])
                         random_result = conn.execute(stmt).first()[0]
                     entry[column] = random_result
@@ -57,7 +48,6 @@ class SQLDAO(DAO):
         self.generated = True
         for _ in range(number_of_entries):
             contents = self.generate_entry()
-            self.insert_buffer = pd.concat([self.insert_buffer, pd.DataFrame([contents])], ignore_index=True)
             with self.engine.connect() as conn:
                 # print("Adding to table ", self.name)
                 stmt = self.data_object.insert().values(contents)
@@ -74,7 +64,6 @@ class SQLDAO(DAO):
             with self.engine.connect() as conn:
                 # take row from inserts, cut first column (index), transform it to dict
                 row_insert = inserts.iloc[row].to_dict()
-                self.insert_buffer = pd.concat([self.insert_buffer, pd.DataFrame([row_insert])], ignore_index=True)
                 for column in row_insert.keys():
                     if column in self.additional_rules.keys():
                         row_insert[column] = self.additional_rules[column](row_insert)
@@ -84,8 +73,17 @@ class SQLDAO(DAO):
         self.loaded = True
         print(self.name, " loaded from file")
 
+    # TODO Make 2 separate ones fow <10k rows,  >10k rows
     def save(self, path: Optional[str] = None) -> None:
-        if path:
-            self.insert_buffer.to_csv(f"{path}/{self.name}_insert.csv", index=False)
-        else: 
-            self.insert_buffer.to_csv(f"{self.name}_insert.csv", index=False)
+        # Get header content
+        columns = self.get_column_names()
+        # Set correct path to save to
+        filepath = f"{path}/{self.name}_insert.csv" if path else f"{self.name}_insert.csv"
+        # Pull all rows from database
+        with self.engine.connect().execution_options(yield_per=True) as conn:
+            stmt = self.data_object.select()
+            with conn.execution_options(stream_results=True, max_row_buffer=100).execute(stmt).mappings() as result:
+                with open(filepath, "w", newline="") as file:
+                    writer = csv.DictWriter(file, fieldnames=columns)
+                    writer.writeheader()
+                    writer.writerows(result)

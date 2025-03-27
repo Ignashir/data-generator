@@ -78,7 +78,5 @@ class CSVDAO(DAO):
         print(self.name, " loaded from file")
     
     def save(self, path: Optional[str] = None) -> None:
-        if path:
-            self.data_object.to_csv(f"{path}/{self.name}_sheet.csv", index=False)
-        else:
-            self.data_object.to_csv(f"{self.name}_sheet.csv", index=False)
+        filepath = f"{path}/{self.name}_sheet.csv" if path else f"{self.name}_sheet.csv"
+        self.data_object.to_csv(filepath, index=False)
