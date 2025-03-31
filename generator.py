@@ -25,6 +25,7 @@ class DataGenerator:
         self.load_json_config(data_config_filepath)
     
     def load_json_config(self, filepath: str):
+        b = time.time()
         # Load the json file with the configuration
         with open(filepath, "r") as file:
             file_content = json.load(file)
@@ -32,14 +33,15 @@ class DataGenerator:
         engine = sqlalchemy.create_engine(os.getenv("SQL_URL"))
         metadata = sqlalchemy.MetaData()
         for table_name, table_config in file_content["Tables"].items():
-            print(f"Creating DAO for {table_name}")
+            # print(f"Creating DAO for {table_name}")
             self.data_storage[table_name] = SQLDAO(table_name, create_table(table_name, table_config, metadata=metadata), 
                                                 list(table_config["foreign_key"]), engine=engine, metadata=metadata)
         metadata.create_all(engine)
         for sheet_name, sheet_columns in file_content["Sheets"].items():
-            print(f"Creating DAO for {sheet_name}")
+            # print(f"Creating DAO for {sheet_name}")
             self.data_storage[sheet_name] = CSVDAO(sheet_name, pd.DataFrame(columns=sheet_columns["columns"]), 
                                                    list(sheet_columns["foreign_key"]), sheet_columns["foreign_key"], engine=engine, metadata=metadata)
+        print("Creation : ", time.time() - b, " s")
     
     def create_loading_dict(self, path: str) -> Dict[str, str]:
         return {file.split("_")[0]: os.path.join(path, file) for file in os.listdir(path)}
@@ -77,6 +79,7 @@ class DataGenerator:
         Args:
             sql_filename (Optional[str], optional): Filename for all creates of tables from .json. Defaults to "DataGenerator/data/create.sql".
         """
+        b = time.time()
         os.makedirs(path, exist_ok=True)
         # Save Tables into Create SQL statements        
         with open(sql_filename, "w") as file:
@@ -91,6 +94,7 @@ class DataGenerator:
         # Save Sheets into .csv and Insert values into .csv
         for data in self.data_storage.values():
             data.save(path_to_save)
+        print("Saving : ", time.time() - b, " s")
     
     def validate_dict(self, generate_dict: Dict[str, int]) -> None:
         """This function should be modified by any one who wants to use the DataGenerator.
@@ -104,7 +108,7 @@ class DataGenerator:
             table.
         """
         if generate_dict["Examiner"] > generate_dict["Examiners"]:
-            raise ValueError("There cannot be more (current)Examiners than (all)Examiners")
+            raise ValueError("There cannot be more current Examiners (db) than all Examiners (csv)")
         if generate_dict["Candidate"] > generate_dict["Reservations"]:
             raise ValueError("There cannot be more Candidates than Reservations")
         if generate_dict["Exam"] > generate_dict["Reservations"]:
@@ -132,8 +136,10 @@ class DataGenerator:
                 #        not dependent on any other data storage
                 #        all dependencies have been already generated
                 if not data_access.has_been_generated() and (data_access.is_not_dependent() or data_access.is_dependency_fulfilled(generation_order)):
+                    b = time.time()
                     data_access.generate(generate_dict[data_access.name])
                     generated += 1
+                    print(data_access.name, " generation : ", time.time() - b, " s")
                 idx += 1
                 # We are out of bounds
                 if idx >= len(generation_order):
@@ -144,42 +150,78 @@ class DataGenerator:
             traceback.print_exc()
 
 
-def from_nothing(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
-    generation_dict = {}
-    print("===============================")
-    print("Provide amount of data to be generated")
-    generation_dict["Examiner"] = int(input("Examiner : "))
-    generation_dict["Candidate"] = int(input("Candidate : "))
-    generation_dict["Vehicle"] = int(input("Vehicle : "))
-    generation_dict["Exam"] = int(input("Exam : "))
-    generation_dict["Reservations"] = int(input("Reservations : "))
-    generation_dict["Examiners"] = int(input("Examiners : "))
-    print("===============================")
-    DataGenerator(path_to_config).generate_data(generation_dict).save_to_file(path=path_to_save)
+# sample_T1 = {
+#     "Examiner": 100,
+#     "Candidate": 900,
+#     "Vehicle": 20,
+#     "Exam": 20000,
+#     "Reservations": 22000,
+#     "Examiners": 100
+# }
+
+sample_T1 = {
+    "Examiner": 4000,
+    "Candidate": 3000,
+    "Vehicle": 200,
+    "Exam": 250000,
+    "Reservations": 250000,
+    "Examiners": 5000
+}
+
+# sample_T1 = {
+#     "Examiner": 5,
+#     "Candidate": 5,
+#     "Vehicle": 2,
+#     "Exam": 7,
+#     "Reservations": 10,
+#     "Examiners": 7
+# }
+import time
 
 
-def preloaded(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
-    generation_dict = {}
-    print("===============================")
-    print("Provide amount of data to be generated")
-    generation_dict["Examiner"] = int(input("Examiner : "))
-    generation_dict["Candidate"] = int(input("Candidate : "))
-    generation_dict["Vehicle"] = int(input("Vehicle : "))
-    generation_dict["Exam"] = int(input("Exam : "))
-    generation_dict["Reservations"] = int(input("Reservations : "))
-    generation_dict["Examiners"] = int(input("Examiners : "))
-    print("===============================")
-    DataGenerator(path_to_config).load_from_folder().generate_data(generation_dict).save_to_file(path=path_to_save)
+begin = time.time()
+# Generate T1   .save_to_file(path="DataGenerator/data/snapshots/")
+DataGenerator("DataGenerator/tables.json").generate_data(sample_T1)
+# DataGenerator("DataGenerator/tables.json").load_from_folder().generate_data(sample_T1).save_to_file(path="DataGenerator/data/snapshots/")
+end = time.time() - begin
+print("Generation took : ", end)
+
+# def from_nothing(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
+#     generation_dict = {}
+#     print("===============================")
+#     print("Provide amount of data to be generated")
+#     generation_dict["Examiner"] = int(input("Examiner : "))
+#     generation_dict["Candidate"] = int(input("Candidate : "))
+#     generation_dict["Vehicle"] = int(input("Vehicle : "))
+#     generation_dict["Exam"] = int(input("Exam : "))
+#     generation_dict["Reservations"] = int(input("Reservations : "))
+#     generation_dict["Examiners"] = int(input("Examiners : "))
+#     print("===============================")
+#     DataGenerator(path_to_config).generate_data(generation_dict).save_to_file(path=path_to_save)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generation of data for provided structures specified in .json file")
-    parser.add_argument("--config", default="DataGenerator/tables.json", help="Path to .json file with all configuration, for more information on structure, please refer to README")
-    parser.add_argument("--load", default=False, help="Boolean value that specifies if you want to generate from nothing or load already generated data. Data to be loaded should be in DataGenerator/data/snapshot/")
+# def preloaded(path_to_config: str, path_to_save: Optional[str] = "DataGenerator/data/snapshots") -> None:
+#     generation_dict = {}
+#     print("===============================")
+#     print("Provide amount of data to be generated")
+#     generation_dict["Examiner"] = int(input("Examiner : "))
+#     generation_dict["Candidate"] = int(input("Candidate : "))
+#     generation_dict["Vehicle"] = int(input("Vehicle : "))
+#     generation_dict["Exam"] = int(input("Exam : "))
+#     generation_dict["Reservations"] = int(input("Reservations : "))
+#     generation_dict["Examiners"] = int(input("Examiners : "))
+#     print("===============================")
+#     DataGenerator(path_to_config).load_from_folder().generate_data(generation_dict).save_to_file(path=path_to_save)
 
-    args = parser.parse_args()
 
-    if args.load:
-        preloaded(args.config)
-    else:
-        from_nothing(args.config)
+# # if __name__ == "__main__":
+# #     parser = argparse.ArgumentParser(description="Generation of data for provided structures specified in .json file")
+# #     parser.add_argument("--config", default="DataGenerator/tables.json", help="Path to .json file with all configuration, for more information on structure, please refer to README")
+# #     parser.add_argument("--load", default=False, help="Boolean value that specifies if you want to generate from nothing or load already generated data. Data to be loaded should be in DataGenerator/data/snapshot/")
+
+# #     args = parser.parse_args()
+
+# #     if args.load:
+# #         preloaded(args.config)
+# #     else:
+# #         from_nothing(args.config)

@@ -16,7 +16,7 @@
         "attr": {
           "Registration_number": "Varchar(8)",
           "Brand": "Varchar(30)",
-          "Type": "Varchar(20)",
+          "CarType": "Varchar(20)",
           "Gearbox": "Boolean",
           "Inspection_date": "Date"
         },
@@ -61,6 +61,7 @@
                 "PESEL": "Candidate",
                 "Reservation_date": "Exam_date",
                 "Reservation_hour": "Begin_hour",
+                "Exam_type": "Type",
                 "Assigned_examiner_ID": "Examiner"
             }
             }

@@ -11,7 +11,8 @@ types_dict = {
     "DateTime": sqlalchemy.DateTime,
     "Char": sqlalchemy.CHAR,
     "Text": sqlalchemy.Text,
-    "Time": sqlalchemy.Time
+    "Time": sqlalchemy.Time,
+    "Identity": sqlalchemy.Identity
 }
 
 def return_datatype(datatype_string: str) -> sqlalchemy.types.TypeEngine:
@@ -53,11 +54,17 @@ def create_table(table_name: str, table_contents: dict, /, metadata: sqlalchemy.
 
     Returns:
         sqlalchemy.Table: _description_
-    """    
+    """
+    def should_identity(column_type: str, column_name: str) -> bool:
+        if isinstance(column_type, sqlalchemy.Integer):
+            if column_name in table_contents["primary_key"]:
+                return sqlalchemy.Identity(start=1, increment=1)
+        return None
+        
     table = sqlalchemy.Table(table_name, 
                              metadata,
                              *[
-                                sqlalchemy.Column(column_name, return_datatype(column_type), primary_key=(column_name in table_contents["primary_key"])) 
+                                sqlalchemy.Column(column_name, return_datatype(column_type), should_identity(column_type, column_name), primary_key=(column_name in table_contents["primary_key"])) 
                                 for column_name, column_type 
                                 in table_contents["attr"].items()
                              ] + [

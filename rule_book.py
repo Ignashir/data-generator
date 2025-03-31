@@ -70,8 +70,9 @@ class RuleBook:
             value = self.rules[column_name]
             if value[1] == -1:
                 res = value[0]()
-                if isinstance(res, int): return res
-                res = re.sub(r"[\s]+", "", res)
+                if isinstance(res, str):
+                    res = re.sub(r"[\s]+", "", res)
+                    return res
                 return res
             else:
                 return value[0]().split(" ")[value[1]]
