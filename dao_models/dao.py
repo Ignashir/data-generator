@@ -42,7 +42,6 @@ class DAO(ABC):
 
     def is_dependency_fulfilled_for_loading(self, list_of_loaded: List[Self]) -> bool:
         # TODO delete this and add function to other as an argument -> make has been generated / loaded static
-        # deadline is close :/
         return all([True if data_storage.has_been_loaded() else False for data_storage in list_of_loaded if self.is_dependent_on(data_storage)])
 
     def has_been_generated(self) -> bool:

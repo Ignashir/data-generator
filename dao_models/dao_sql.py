@@ -18,6 +18,11 @@ class SQLDAO(DAO):
             # (can't be None because all such values identicate that it needs to be generated)
             "Vehicle": lambda content: None if content["Type"] is False else content["Vehicle"]
         }
+        self.type_changer = {
+            "Gearbox": lambda content: True if content["Gearbox"] == "True" else False,
+            "Result": lambda content: True if content["Result"] == "True" else False,
+            "Type": lambda content: True if content["Type"] == "True" else False,
+        }
         self.additional_rules_tables = {
             # Database hard coded behaviour (like using Identity for primary key)
             "Exam": lambda content: content.pop("Exam_ID")
@@ -94,7 +99,7 @@ class SQLDAO(DAO):
                 conn.execute(sqlalchemy.insert(self.data_object), batch)
                 conn.commit()
 
-# TODO tu cos nie gralo z tego co pamietam
+# TODO Naprawic bo czyta string, a oczekuje innych typow
     def load(self, path: str, batch_size: int = 1000) -> None:
         with self.engine.connect() as conn:
             with open(path, newline="") as bulk:
@@ -103,8 +108,10 @@ class SQLDAO(DAO):
                 for row in data:
                     # Apply any necessary rules
                     for column in row.keys():
-                        if column in self.additional_rules.keys():
-                            row[column] = self.additional_rules[column](row)
+                        if column in self.additional_rules_columns.keys():
+                            row[column] = self.additional_rules_columns[column](row)
+                        if column in self.type_changer.keys():
+                            row[column] = self.type_changer[column](row)
                     # Add row into batch
                     batch.append(row)
                     if len(batch) >= batch_size:
@@ -115,6 +122,8 @@ class SQLDAO(DAO):
                 if batch:
                     conn.execute(sqlalchemy.insert(self.data_object), batch)
                     conn.commit()
+        batch = None
+        self.loaded = True
         print(self.name, " loaded from file")
 
 
