@@ -84,7 +84,7 @@ class CSVDAO(DAO):
         self.generated = True
         batch = []
         pulled_dependencies = {}
-        pull_size = 100
+        pull_size = 1000
         os.makedirs(self.snapshot, exist_ok=True)
         with self.engine.connect() as conn:
             with open(f"{self.snapshot}/{self.name}_.csv", "w") as file:

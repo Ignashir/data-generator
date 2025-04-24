@@ -53,6 +53,8 @@ class DataGenerator:
         folder_path = os.path.join(os.getcwd(), folder_path)
         # Iterate through all snapshots in folder
         for timestamp in os.listdir(folder_path):
+            if not os.path.isdir(os.path.join(folder_path, timestamp)):
+                continue
             files = self.create_loading_dict(os.path.join(folder_path, timestamp))
             # Sort the order of generation by the dependency
             loading_order = sorted(list(self.data_storage.values()), key=lambda x: len(x.dependency))

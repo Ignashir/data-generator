@@ -39,16 +39,16 @@ class RuleBook:
         "phonenumber": (fake.phone_number, -1), 
         "phonenum": (fake.phone_number, -1),
         "licensenumber": (fake.identity_card_number, -1),
-        "gearbox": (lambda : fake.boolean(70), -1),
+        "gearbox": (lambda : int(fake.boolean(70)), -1),
         "brand": (lambda : fake.random_element(elements = ["Toyota", "Suzuki", "Renault", "Ford", "Opel", "Skoda", "Kia", "Volkswagen"]), -1),
         "cartype": (lambda : fake.random_element(elements = ["car", "truck", "motorcycle"]), -1),
         "inspectiondate": (lambda : fake.date_between(start_date="-1y", end_date="-1w").strftime(self.config["date_format"]), -1),
         "examdate": (self.date_generator, -1),
         "beginhour": (self.hour_generator, -1),
         "endhour": (self.hour_generator, -1),
-        "result": (lambda : fake.boolean(70), -1),
+        "result": (lambda : int(fake.boolean(70)), -1),
         "category": (lambda : fake.random_element(elements= ["AM", "A1", "A2", "B1", "B", "B+E" , "C", "C+E"]), -1),
-        "type": (lambda : fake.boolean(60), -1),
+        "type": (lambda : int(fake.boolean(60)), -1),
         "examcomment": (lambda : fake.text(max_nb_chars=200), -1),
         "registrationnumber": (lambda : fake.bothify(text='??######', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'), -1),
         "dateofendofwork": (lambda : fake.date_between(start_date="+1w", end_date="+1y").strftime(self.config["date_format"]), -1),
@@ -57,7 +57,7 @@ class RuleBook:
         "examid": (lambda : fake.random_int(min=1, max=10000000), -1),
         "reservationdate": (lambda : fake.date_between(start_date="-3w").strftime(self.config["date_format"]), -1),
         "reservationhour": (lambda : fake.time(pattern=self.config["time_format"]), -1),
-        "examtype": (lambda : fake.boolean(50), -1), 
+        "examtype": (lambda : int(fake.boolean(50)), -1), 
         "assignedexaminerid": (fake.identity_card_number, -1)
     }   
 

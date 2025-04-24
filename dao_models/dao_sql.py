@@ -2,6 +2,10 @@ from .dao import DAO
 from rule_book import BasicRuleBook
 from typing import Optional, List, Any, Dict
 
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData
+from sqlalchemy.dialects.mssql import INTEGER
+from sqlalchemy import Identity
+
 import sqlalchemy
 import pandas as pd
 import csv
@@ -27,10 +31,14 @@ class SQLDAO(DAO):
             # Database hard coded behaviour (like using Identity for primary key)
             "Exam": lambda content: content.pop("Exam_ID")
         }
+        self.prim_keys = set()
     
     def get_column_names(self) -> Dict[str, None]:
         return {col.name: "None" for col in self.data_object.columns}
     
+    def is_primary_key_used(self, new_primary) -> bool:
+        return new_primary in self.prim_keys
+
     def generate_entry(self, dependency_contents: Dict[str, Any]) -> Dict[str, Any]:
         entry = self.get_column_names()
         if self.data_object.name in self.additional_rules_tables.keys():
@@ -49,6 +57,15 @@ class SQLDAO(DAO):
                     # Take random value from database
                     entry[column] = next(dependency_contents[column]["data"], [None])[0]
                     dependency_contents[column]["remaining"] -= 1
+        primary_key = self.data_object.primary_key.columns[0]
+        # TODO zrobic inaczej
+        if (primary_key.name != "Exam_ID"):
+            # Check if primary key is unique
+            while (self.is_primary_key_used(entry[primary_key.name])):
+                # If it is not unique, generate new one
+                entry[primary_key.name] = BasicRuleBook.generate_column_value(primary_key.name)
+            # Add primary key to the set of already generated primary keys
+            self.prim_keys.add(entry[primary_key.name])
         return entry
 
     def refill_query(self, table_name: str, connector, pull_size) -> Dict[str, Any]:
@@ -76,7 +93,7 @@ class SQLDAO(DAO):
         # Dict with rows from database and amount of rows left to pull
         pulled_dependencies = {}
         # How many rows at once to pull from database
-        pull_size = 1000
+        pull_size = 5000
         with self.engine.connect() as conn:
             # Go through all dependencies and pull necessary info from db
             for dep in self.dependency:
@@ -100,7 +117,7 @@ class SQLDAO(DAO):
                 conn.commit()
 
 # TODO Naprawic bo czyta string, a oczekuje innych typow
-    def load(self, path: str, batch_size: int = 1000) -> None:
+    def load(self, path: str, batch_size: int = 5000) -> None:
         with self.engine.connect() as conn:
             with open(path, newline="") as bulk:
                 data = csv.DictReader(bulk)
@@ -113,6 +130,7 @@ class SQLDAO(DAO):
                         if column in self.type_changer.keys():
                             row[column] = self.type_changer[column](row)
                     # Add row into batch
+                    self.prim_keys.add(row[self.data_object.primary_key.columns[0].name])
                     batch.append(row)
                     if len(batch) >= batch_size:
                         # Bulk insert
